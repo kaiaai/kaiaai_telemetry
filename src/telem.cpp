@@ -1,4 +1,4 @@
-// Copyright 2023-2024 REMAKE.AI, KAIA.AI, MAKERSPET.COM
+// Copyright 2023-2024 REMAKE.AI, KAIA.AI
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,17 +55,17 @@ public:
   KaiaaiTelemetry()
   : Node(NODE_NAME)
   {
-    this->declare_parameter("laser_sensor.model", std::vector<std::string>({"YDLIDAR-X4", "LDS02RR"}));
-    this->declare_parameter("laser_sensor.angle_offset_deg", std::vector<double>({0.0, -180.0}));
-    this->declare_parameter("laser_sensor.clockwise", std::vector<bool>({true, true}));
-    this->declare_parameter("laser_sensor.pub_scan_size", std::vector<int>({720, 360}));
-    this->declare_parameter("laser_sensor.range_min_meters", std::vector<double>({0.15, 0.15}));
-    this->declare_parameter("laser_sensor.range_max_meters", std::vector<double>({12.0, 6.0}));
-    this->declare_parameter("laser_sensor.intensity", std::vector<bool>({false, false}));
+    this->declare_parameter("lidar.model", std::vector<std::string>({"YDLIDAR-X4", "LDS02RR"}));
+    this->declare_parameter("lidar.angle_offset_deg", std::vector<double>({0.0, -180.0}));
+    this->declare_parameter("lidar.clockwise", std::vector<bool>({true, true}));
+    this->declare_parameter("lidar.pub_scan_size", std::vector<int>({720, 360}));
+    this->declare_parameter("lidar.range_min_meters", std::vector<double>({0.15, 0.15}));
+    this->declare_parameter("lidar.range_max_meters", std::vector<double>({12.0, 6.0}));
+    this->declare_parameter("lidar.intensity", std::vector<bool>({false, false}));
 
     this->declare_parameter("laser_scan.topic_name_pub", "scan");
     this->declare_parameter("laser_scan.frame_id", "base_scan");
-    this->declare_parameter("laser_scan.lds_model", "YDLIDAR-X4");
+    this->declare_parameter("laser_scan.lidar_model", "YDLIDAR-X4");
     this->declare_parameter("laser_scan.mask_radius_meters", 0.0);
     this->declare_parameter("laser_scan.discard_broken_scans", false);
 
@@ -241,33 +241,33 @@ private:
   void lds_setup()
   {
     //RCLCPP_INFO(this->get_logger(), "string[] %s, double[] %s",
-    //            this->get_parameter("laser_sensor.model").value_to_string().c_str(),
-    //            this->get_parameter("laser_sensor.angle_offset_deg").value_to_string().c_str());
+    //            this->get_parameter("lidar.model").value_to_string().c_str(),
+    //            this->get_parameter("lidar.angle_offset_deg").value_to_string().c_str());
     if (plds != NULL)
       return;
 
-    const std::vector<std::string> model = this->get_parameter("laser_sensor.model").as_string_array();
-    const std::vector<double> angle_offset_deg = this->get_parameter("laser_sensor.angle_offset_deg").as_double_array();
-    const std::vector<bool> clockwise = this->get_parameter("laser_sensor.clockwise").as_bool_array();
-    const std::vector<long int> pub_scan_size = this->get_parameter("laser_sensor.pub_scan_size").as_integer_array();
-    const std::vector<double> range_min_meters = this->get_parameter("laser_sensor.range_min_meters").as_double_array();
-    const std::vector<double> range_max_meters = this->get_parameter("laser_sensor.range_max_meters").as_double_array();
-    const std::vector<bool> publish_intensity = this->get_parameter("laser_sensor.intensity").as_bool_array();
+    const std::vector<std::string> model = this->get_parameter("lidar.model").as_string_array();
+    const std::vector<double> angle_offset_deg = this->get_parameter("lidar.angle_offset_deg").as_double_array();
+    const std::vector<bool> clockwise = this->get_parameter("lidar.clockwise").as_bool_array();
+    const std::vector<long int> pub_scan_size = this->get_parameter("lidar.pub_scan_size").as_integer_array();
+    const std::vector<double> range_min_meters = this->get_parameter("lidar.range_min_meters").as_double_array();
+    const std::vector<double> range_max_meters = this->get_parameter("lidar.range_max_meters").as_double_array();
+    const std::vector<bool> publish_intensity = this->get_parameter("lidar.intensity").as_bool_array();
 
     long unsigned int model_count = model.size();
     if (pub_scan_size.size() != model_count || angle_offset_deg.size() != model_count
         || range_min_meters.size() != model_count || range_max_meters.size() != model_count
         || clockwise.size() != model_count || publish_intensity.size() != model_count) {
-      RCLCPP_FATAL(this->get_logger(), "laser_sensor parameter array sizes must be equal");
+      RCLCPP_FATAL(this->get_logger(), "lidar parameter array sizes must be equal");
       rclcpp::shutdown();
     }
 
-    const std::string lds_model = this->get_parameter("laser_scan.lds_model").as_string();
+    const std::string lidar_model = this->get_parameter("laser_scan.lidar_model").as_string();
 
     int model_idx = 0;
     for (auto &s: model) {
 
-      if (lds_model.compare(s) == 0) {
+      if (lidar_model.compare(s) == 0) {
         if (s.compare(LDS_YDLidarX3::get_model_name()) == 0) {
           plds = new LDS_YDLidarX3();
           break;
@@ -337,7 +337,7 @@ private:
     }
 
     if (plds == NULL) {
-      RCLCPP_FATAL(this->get_logger(), "LDS model %s not found", lds_model.c_str());
+      RCLCPP_FATAL(this->get_logger(), "LDS model %s not found", lidar_model.c_str());
       rclcpp::shutdown();
       return;
     }
@@ -363,8 +363,8 @@ private:
     }
 
     // RCLCPP_INFO(this->get_logger(), "Laser sensor model %s, pub_scan_size_ %d, angle_offset_deg_ %f",
-    //   lds_model.c_str(), pub_scan_size_, angle_offset_deg_);
-    RCLCPP_INFO(this->get_logger(), "LDS model %s", lds_model.c_str());
+    //   lidar_model.c_str(), pub_scan_size_, angle_offset_deg_);
+    RCLCPP_INFO(this->get_logger(), "LDS model %s", lidar_model.c_str());
     //RCLCPP_INFO(this->get_logger(), "mask_radius_meters_ %lf", mask_radius_meters_);
   }
 
