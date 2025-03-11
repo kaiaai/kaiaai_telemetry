@@ -1,4 +1,4 @@
-// Copyright 2024 REMAKE.AI, KAIA.AI, MAKERSPET.COM
+// Copyright 2024-2025 KAIA.AI
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,14 +23,12 @@ protected:
   static const uint8_t PACKET_TYPE = 0x61;
   static const uint8_t DATA_TYPE_RPM_AND_MEAS = 0xAD;
   static const uint8_t DATA_TYPE_RPM_ONLY = 0xAE;
-  static const uint8_t PACKETS_PER_SCAN = 16;
-  static constexpr float DEG_PER_PACKET = 360.0f / (float)PACKETS_PER_SCAN;
   static const uint8_t MAX_DATA_SAMPLES = 61; // 28
 
   struct meas_sample_t {
     uint8_t quality;
     uint16_t distance_mm_x4;
-  };
+  } __attribute__((packed));
   static const uint16_t MAX_DATA_BYTE_LEN = sizeof(meas_sample_t) * MAX_DATA_SAMPLES;
 
   struct scan_packet_t {
@@ -49,6 +47,10 @@ protected:
 
     uint16_t   checksum;
   } __attribute__((packed));
+
+  virtual uint8_t get_packets_per_scan() {
+    return 16;
+  }
 
   uint8_t parser_state;
   float scan_freq_hz;
@@ -176,7 +178,8 @@ public:
           break;
         }
         float start_angle = start_angle_x100 * 0.01;
-        float coeff = DEG_PER_PACKET / (float)sample_count;
+        float coeff = 360.0f / (get_packets_per_scan() * sample_count);
+
         for (uint16_t idx = 0; idx < sample_count; idx++) {
           float angle_deg = start_angle + idx * coeff;
 

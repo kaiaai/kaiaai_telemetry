@@ -1,4 +1,4 @@
-// Copyright 2024 REMAKE.AI, KAIA.AI, MAKERSPET.COM
+// Copyright 2024-2025 KAIA.AI
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,4 +20,7 @@ class LDS_Delta2G : public LDS_Delta2A
 public:
   LDS_Delta2G() : LDS_Delta2A() {}
   static const std::string get_model_name() { return "3IROBOTIX-DELTA-2G"; }
+  uint8_t get_packets_per_scan() override {
+    return 15;
+  }
 };
