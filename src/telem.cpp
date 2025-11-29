@@ -42,6 +42,7 @@
 #include "lds_delta_2g.h"
 #include "lds_ldrobot_ld14p.h"
 #include "lds_camsense_x1.h"
+#include "lds_ldrobot_ld19.h"
 
 using std::placeholders::_1;
 
@@ -55,8 +56,8 @@ public:
   KaiaaiTelemetry()
   : Node(NODE_NAME)
   {
-    this->declare_parameter("lidar.model", std::vector<std::string>({"YDLIDAR-X4", "LDS02RR"}));
-    this->declare_parameter("lidar.angle_offset_deg", std::vector<double>({0.0, -180.0}));
+    this->declare_parameter("lidar.model", std::vector<std::string>({"YDLIDAR-X4", "LDROBOT-LD19"}));
+    this->declare_parameter("lidar.angle_offset_deg", std::vector<double>({0.0, 0.0}));
     this->declare_parameter("lidar.clockwise", std::vector<bool>({true, true}));
     this->declare_parameter("lidar.pub_scan_size", std::vector<int>({720, 360}));
     this->declare_parameter("lidar.range_min_meters", std::vector<double>({0.15, 0.15}));
@@ -266,72 +267,37 @@ private:
 
     int model_idx = 0;
     for (auto &s: model) {
-
-      if (lidar_model.compare(s) == 0) {
-        if (s.compare(LDS_YDLidarX3::get_model_name()) == 0) {
-          plds = new LDS_YDLidarX3();
-          break;
-        } else {
-          if (s.compare(LDS_YDLidarX2X2L::get_model_name()) == 0) {
-            plds = new LDS_YDLidarX2X2L();
-            break;
-          } else {
-            if (s.compare(LDS_LDS02RR::get_model_name()) == 0) {
-              plds = new LDS_LDS02RR();
-              break;
-            } else {
-              if (s.compare(LDS_NeatoXV11::get_model_name()) == 0) {
-                plds = new LDS_NeatoXV11();
-                break;
-              } else {
-                if (s.compare(LDS_RPLidarA1::get_model_name()) == 0) {
-                  plds = new LDS_RPLidarA1();
-                  break;
-                } else {
-                  if (s.compare(LDS_YDLidarX3PRO::get_model_name()) == 0) {
-                    plds = new LDS_YDLidarX3PRO();
-                    break;
-                  } else {
-                    if (s.compare(LDS_Delta2G::get_model_name()) == 0) {
-                      plds = new LDS_Delta2G();
-                      break;
-                    } else {
-                      if (s.compare(LDS_Delta2A::get_model_name()) == 0) {
-                        plds = new LDS_Delta2A();
-                        break;
-                      } else {
-                        if (s.compare(LDS_Delta2B::get_model_name()) == 0) {
-                          plds = new LDS_Delta2B();
-                          break;
-                        } else {
-                          if (s.compare(LDS_LDRobotLD14P::get_model_name()) == 0) {
-                            plds = new LDS_LDRobotLD14P();
-                            break;
-                          } else {
-                            if (s.compare(LDS_YDLidarX4::get_model_name()) == 0) {
-                              plds = new LDS_YDLidarX4();
-                              break;
-                            } else {
-                              if (s.compare(LDS_YDLidarSCL::get_model_name()) == 0) {
-                                plds = new LDS_YDLidarSCL();
-                                break;
-                              } else {
-                                if (s.compare(LDS_CamsenseX1::get_model_name()) == 0) {
-                                  plds = new LDS_CamsenseX1();
-                                  break;
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+      if (lidar_model == s) {
+      if (s == LDS_YDLidarX3::get_model_name()) {
+        plds = new LDS_YDLidarX3();
+      } else if (s == LDS_YDLidarX2X2L::get_model_name()) {
+        plds = new LDS_YDLidarX2X2L();
+      } else if (s == LDS_LDS02RR::get_model_name()) {
+        plds = new LDS_LDS02RR();
+      } else if (s == LDS_NeatoXV11::get_model_name()) {
+        plds = new LDS_NeatoXV11();
+      } else if (s == LDS_RPLidarA1::get_model_name()) {
+        plds = new LDS_RPLidarA1();
+      } else if (s == LDS_YDLidarX3PRO::get_model_name()) {
+        plds = new LDS_YDLidarX3PRO();
+      } else if (s == LDS_Delta2G::get_model_name()) {
+        plds = new LDS_Delta2G();
+      } else if (s == LDS_Delta2A::get_model_name()) {
+        plds = new LDS_Delta2A();
+      } else if (s == LDS_Delta2B::get_model_name()) {
+        plds = new LDS_Delta2B();
+      } else if (s == LDS_LDRobotLD14P::get_model_name()) {
+        plds = new LDS_LDRobotLD14P();
+      } else if (s == LDS_LDRobotLD19::get_model_name()) {
+        plds = new LDS_LDRobotLD19();        
+      } else if (s == LDS_YDLidarX4::get_model_name()) {
+        plds = new LDS_YDLidarX4();
+      } else if (s == LDS_YDLidarSCL::get_model_name()) {
+        plds = new LDS_YDLidarSCL();
+      } else if (s == LDS_CamsenseX1::get_model_name()) {
+        plds = new LDS_CamsenseX1();
+      }
+      if (plds != NULL) break;
       }
       model_idx++;
     }
