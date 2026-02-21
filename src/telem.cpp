@@ -474,13 +474,13 @@ private:
     //float scan_time = plds->get_scan_time();
     //if (scan_time <= 0) {
       // Hack up a scan time estimate
-    float scan_time = pmsg->stamp.sec - scan_start_stamp_.sec + (pmsg->stamp.nanosec - scan_start_stamp_.nanosec)*1e-6;
+    float scan_time = pmsg->stamp.sec - scan_start_stamp_.sec + (pmsg->stamp.nanosec - scan_start_stamp_.nanosec)*1e-9;
     scan_time = scan_time > 0.25 ? 0 : scan_time; // Require 4Hz scan minimum
     //}
     scan_time = scan_time < 0 ? 0 : scan_time;
     //laser_scan_msg.scan_time = scan_time > 0 ? scan_time : 0;
     laser_scan_msg.scan_time = scan_time;
-    laser_scan_msg.time_increment = scan_time/(pub_scan_size_ + 1);
+    laser_scan_msg.time_increment = scan_time/(pub_scan_size_ - 1);
     scan_start_stamp_ = pmsg->stamp;
 
     laser_scan_pub_->publish(laser_scan_msg);
