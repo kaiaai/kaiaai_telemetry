@@ -69,6 +69,7 @@ public:
     this->declare_parameter("laser_scan.lidar_model", "YDLIDAR-X4");
     this->declare_parameter("laser_scan.mask_radius_meters", 0.0);
     this->declare_parameter("laser_scan.discard_broken_scans", false);
+    this->declare_parameter("laser_scan.min_scan_time", 0.25);
 
     this->declare_parameter("telemetry.topic_name_sub", "telemetry");
 
@@ -111,6 +112,7 @@ public:
     range_min_meters_ = 0.15;
     range_max_meters_ = 12.0;
     mask_radius_meters_ = 0.0;
+    min_scan_time_ = 1/4.0;
 
     clear_ranges_buffer();
     seq_last_ = 0;
@@ -121,6 +123,7 @@ public:
     broken_scan_ = false;
     discard_broken_scans_ = false;
     publish_intensity_ = false;
+    last_valid_scan_time_ = 0.0f;
   }
 
   ~KaiaaiTelemetry()
@@ -438,6 +441,7 @@ private:
     lds_msg_count_ = 0;
     lds_data_length_ = 0;
     mask_radius_meters_ = this->get_parameter("laser_scan.mask_radius_meters").as_double();
+    min_scan_time_ = this->get_parameter("laser_scan.min_scan_time").as_double();
   }
 
   void publish_scan()
@@ -445,6 +449,9 @@ private:
     //RCLCPP_INFO(this->get_logger(), "publish_scan() total %u valid %u fail %u crc %u msg %u len %u",
     //  scan_point_count_total_, scan_point_count_valid_, lds_invalid_packet_count_, lds_crc_error_count_,
     //  lds_msg_count_, lds_data_length_);
+
+    // Capture broken_scan_ state before resetting
+    bool scan_was_broken = broken_scan_;
 
     if (broken_scan_ && discard_broken_scans_) {
       broken_scan_ = false;
@@ -454,7 +461,7 @@ private:
 
     if (scan_start_stamp_.sec == 0 && scan_start_stamp_.nanosec == 0) {
       scan_start_stamp_ = pmsg->stamp;
-      return;
+      scan_was_broken = true; // First scan, timing not valid
     }
 
     auto laser_scan_msg = sensor_msgs::msg::LaserScan();
@@ -471,14 +478,19 @@ private:
     if (publish_intensity_)
       laser_scan_msg.intensities = intensities_;
 
-    //float scan_time = plds->get_scan_time();
-    //if (scan_time <= 0) {
-      // Hack up a scan time estimate
+    // Calculate scan time from timestamp difference
     float scan_time = pmsg->stamp.sec - scan_start_stamp_.sec + (pmsg->stamp.nanosec - scan_start_stamp_.nanosec)*1e-9;
-    scan_time = scan_time > 0.25 ? 0 : scan_time; // Require 4Hz scan minimum
-    //}
-    scan_time = scan_time < 0 ? 0 : scan_time;
-    //laser_scan_msg.scan_time = scan_time > 0 ? scan_time : 0;
+
+    // Determine if the calculated scan_time is valid
+    bool scan_time_valid = (scan_time > 0) && (scan_time <= min_scan_time_);
+
+    if (!scan_was_broken && scan_time_valid) {
+      // Clean scan with valid timing - save as last known good scan time
+      last_valid_scan_time_ = scan_time;
+    }
+
+    scan_time = last_valid_scan_time_;
+
     laser_scan_msg.scan_time = scan_time;
     laser_scan_msg.time_increment = scan_time/(pub_scan_size_ - 1);
     scan_start_stamp_ = pmsg->stamp;
@@ -511,9 +523,11 @@ private:
   double range_min_meters_;
   double range_max_meters_;
   double mask_radius_meters_;
+  double min_scan_time_;
   bool broken_scan_;
   bool discard_broken_scans_;
   bool publish_intensity_;
+  float last_valid_scan_time_;
 
   kaiaai_msgs::msg::KaiaaiTelemetry2 * pmsg;
   builtin_interfaces::msg::Time scan_start_stamp_;

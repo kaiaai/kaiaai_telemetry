@@ -6,6 +6,7 @@ kaiaai_telemetry_node:
       topic_name_pub: "scan"
       frame_id: "base_scan"
       discard_broken_scans: true
+      timestamp_comp: 0.0
 #      lidar_model: "XIAOMI-LDS02RR"
 
     lidar:
